@@ -18,6 +18,8 @@ void split(Block* fitting_slot, size_t size) // these parameters are the block w
     Block* left = (void*)((void*)fitting_slot + sizeof(Block));
     Block* right = (void*)((void*)fitting_slot + size + 2 * sizeof(Block));
 
+    fitting_slot->nextBlock = left;
+
     left->size = size;
     left->free = 0;
     left->nextBlock = right;
@@ -30,7 +32,7 @@ void split(Block* fitting_slot, size_t size) // these parameters are the block w
 
     right->size = (fitting_slot->size) - size - sizeof(Block);
     right->free = 1;
-    right->nextBlock = NULL;
+    right->nextBlock = fitting_slot->nextBlock;
     right->prevBlock = left;
 
     /*
@@ -41,91 +43,112 @@ void split(Block* fitting_slot, size_t size) // these parameters are the block w
 void* new_malloc(size_t size)
 {
     Block* freeList = memory;
-
-    //printf("%p", (void*) freeList);
+    void* result;
+    int memoryAmmount;
 
     if(memory == 0)
     {
+        Block* next;
         memory = sbrk(8192);
 
         freeList = memory;
+        next = memory + sizeof(Block)*2 + size;
 
-        freeList->size = 8192 - sizeof(Block); 
-        freeList->free = 1;
-        freeList->nextBlock = NULL;
+        //printf("%p %p is freeList & next \n", freeList, next);
+
+        freeList->size = size; 
+        freeList->free = 0;
+        freeList->nextBlock = next;
         freeList->prevBlock = NULL; 
 
+        //printf("%p %p is freeList & next \n", freeList, freeList->nextBlock);
+
+        next->free = 1;
+        next->nextBlock = NULL;
+        next->prevBlock = freeList;
+        next->size = 8192 - size - sizeof(Block)*2;
+
         printf("Memory initialized\n");
+
+        return (void*)freeList;
     }
     else
     {
-        do
+        while(freeList/*->nextBlock*/ != NULL)
         {
-            //printf("Itterating through the loop \n");
-            void* result;
-            //printf("%p \n", result);
+            printf("%p \n", freeList);
+            //printf("%ld is freeList size \n", freeList->size);
 
-            printf("%ld is freeList size \n", freeList->size);
-            printf("%ld is size\n", size);
-
-            if((freeList->size) == size && ((freeList->free) == 1))
+            if(freeList->free == 1)
             {
-                freeList->free = 0;
-                result = (void*)(++freeList);
 
-                printf("Exact fitting block allocated\n");
+                if((freeList->size) == size + sizeof(Block))
+                {
+                    freeList->free = 0;
+                    result = (void*)(++freeList);
 
-                return result;
+                    printf("Exact fitting block allocated\n");
+
+                    return result;
+                }
+                else if((freeList->size) > size + sizeof(Block))
+                {
+                    split(freeList, size);
+                    result = (void*)(++freeList);
+
+                    printf("%p\n", result);
+                    printf("Fitting block allocated with a split\n");
+
+                    return result;
+                }
+                else if((freeList->size) < size + sizeof(Block))
+                {
+                    //create new block of size 8192 bytes - sizeof(Block) - which starts at the memory address returned by sbrk when called
+
+                    if(freeList->nextBlock != NULL)
+                    {
+
+                    }
+                    else
+                    {
+                        Block* new = sbrk(8192);
+
+                        /*freeList->nextBlock = new;
+
+                        new->free = 1;
+                        new->size = 8192 - sizeof(Block);
+                        new->prevBlock = freeList;
+                        new->nextBlock = NULL;*/
+
+                        result = sbrk(8192) + sizeof(Block) + size + 1; 
+
+                        printf("Adding new memory to the heap \n");
+
+                        return result;
+                    }
+
+                }
+                else
+                {
+                    printf("ERROR");
+                }
+                
             }
-            else if((freeList->size) > (size + sizeof(Block)) && ((freeList->free) == 1))
+            else
             {
-                split(freeList, size);
-                result = (void*)(++freeList);
-
-                printf("Fitting block allocated with a split\n");
-
-                return result;
+                /* code */
             }
-            else if((freeList->nextBlock != NULL) && ((freeList->free) == 1))
-            {
-                //create new block of size 8192 bytes - sizeof(Block) - which starts at the memory address returned by sbrk when called
-
-                Block* new = sbrk(8192);
-
-                freeList->nextBlock = new;
-
-                new->free = 1;
-                new->size = 8192 - sizeof(Block);
-                new->prevBlock = freeList;
-                new->nextBlock = NULL;
-
-                result = sbrk(8192); 
-
-                printf("Adding new memory to the stack \n");
-
-                return result;
-            }
-            else{}
 
             freeList = freeList->nextBlock;
 
-        }while((((freeList->size) < size) || ((freeList->free)==0)) && (freeList->nextBlock != NULL));
+
+        }
     }
-    
 }
 
 int main()
 {
+    new_malloc(920);
     new_malloc(10);
-    new_malloc(900);
-    new_malloc(900);
-    new_malloc(900);
 
-    /*for(int i = 0; i < 12; i++)
-    {
-        new_malloc(900);
-    }*/
-    
 }
-
-
