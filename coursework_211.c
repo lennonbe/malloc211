@@ -13,24 +13,25 @@ typedef struct Block
 
 static void* memory = 0;
 
-void split(Block *fitting_slot, size_t size) // these parameters are the block which we will be splitting and the size we will be using from this block
+void split(Block* fitting_slot, size_t size) // these parameters are the block which we will be splitting and the size we will be using from this block
 {
-    Block* new = (void*)((void*)fitting_slot + size + sizeof(Block));
-    Block* new = (void*)((void*)fitting_slot + size + sizeof(Block));
+    Block* left = (void*)((void*)fitting_slot + sizeof(Block));
+    Block* right = (void*)((void*)fitting_slot + size + 2 * sizeof(Block));
 
-    new->size = (fitting_slot->size) - size - sizeof(Block);
-    new->free = 1;
-    new->nextBlock = fitting_slot->nextBlock;
-    new->prevBlock = fitting_slot;
+    left->size = size;
+    left->free = 0;
+    left->nextBlock = right;
+    left->prevBlock = fitting_slot;
 
     /*
     These lines above show how the new block of memory in the structure is allocated. A new block of memory is created and its parameters are filled.
     This new Block struct will serve as the new free part of the structure, since its free variable is set to 1.
     */
 
-    fitting_slot->size = size;
-    fitting_slot->free = 0;
-    fitting_slot->nextBlock = new;
+    right->size = (fitting_slot->size) - size - sizeof(Block);
+    right->free = 1;
+    right->nextBlock = NULL;
+    right->prevBlock = left;
 
     /*
     Fitting slot will be used to store the used storage area. It will also connect with the new block through a nextBlock pointer in the structure.
