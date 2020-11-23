@@ -18,9 +18,6 @@ Block* tail;
 
 void* split(Block* inputBlock, size_t size) // these parameters are the block which we will be splitting and the size we will be using from this block
 {
-    //left = (void*)((void*)fitting_slot + sizeof(Block));
-    //right = (void*)((void*)fitting_slot + size + 2 * sizeof(Block));
-
     Block* leftBlock = inputBlock;
     Block* rightBlock = inputBlock + size + sizeof(Block);
 
@@ -41,14 +38,7 @@ void* split(Block* inputBlock, size_t size) // these parameters are the block wh
 
     tail = rightBlock;
 
-    /*printf("%p is free %d\n", leftBlock, leftBlock->free);
-    printf("%p is free %d\n", rightBlock, rightBlock->free);*/
-
     return ((void*)(rightBlock + sizeof(Block)));
-
-    //fitting_slot->nextBlock = left;
-    //inputBlock = leftBlock;
-
     /*
     Fitting slot will be used to store the used storage area. It will also connect with the new block through a nextBlock pointer in the structure.
     */
@@ -94,8 +84,7 @@ void* new_malloc(size_t size)
 
         if(temp->free == 0)
         {
-
-            if((temp->size) == size + sizeof(Block))
+            if((temp->size) == (size + sizeof(Block)))
             {
                 Block* next = temp + size + sizeof(Block);//by setting the pointer to a value in the heap C automatically stores the pointer variable in the heap as well
 
@@ -110,7 +99,7 @@ void* new_malloc(size_t size)
 
                 return result;
             }
-            else if((temp->size) > size + sizeof(Block))
+            else if((temp->size) > (size + sizeof(Block)))
             {
                 result = split(temp, size);
 
@@ -121,9 +110,9 @@ void* new_malloc(size_t size)
             else //if((temp->size) < size + sizeof(Block))
             {
                 //create new block of size 8192 bytes - sizeof(Block) - which starts at the memory address returned by sbrk when called
-
-                if(temp->nextBlock == NULL)
+                if(temp->nextBlock == NULL) //we are currently on last block
                 {
+                    printf("WORKING 1");
                     /*if(endOfHeap + 1 == sbrk(0))
                     {
 
@@ -140,10 +129,14 @@ void* new_malloc(size_t size)
                     Block* next = sbrk(8192);
                     Block* next2 = next + size + sizeof(Block);
 
+                    printf("WORKING 2");
+
                     next->size = size;
                     next->nextBlock = next2;
                     next->prevBlock = temp;
                     next->free = 1;
+
+                    printf("WORKING 3");
 
                     //int tempInit = temp->size;
 
@@ -152,9 +145,15 @@ void* new_malloc(size_t size)
                     next2->prevBlock = next;
                     next2->free = 0;
 
+                    printf("WORKING 4");
+
                     temp->nextBlock = next;
 
+                    printf("WORKING 5");
+
                     result = (void*)(next + sizeof(Block));
+
+                    printf("WORKING 6");
 
                     printf("Adding new memory to the heap \n");
 
@@ -171,7 +170,7 @@ void* new_malloc(size_t size)
         }
         else
         {
-            
+            printf("else \n");
         }
 
         temp = temp->nextBlock;
@@ -188,9 +187,4 @@ int main()
     new_malloc(1120);
     new_malloc(1120);
     new_malloc(6000);
-    /*new_malloc(10);
-    new_malloc(120);
-    new_malloc(10);
-    new_malloc(120);
-    new_malloc(10);*/
 }
