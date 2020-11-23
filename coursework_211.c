@@ -12,150 +12,148 @@ typedef struct Block
 }Block;
 
 static void* memory = 0;
-static void* left = 0;
-static void* right = 0;
+Block* head;
+Block* tail;
 
-/*static Block* left;
-static Block* right;*/
-
-void split(Block* fitting_slot, size_t size) // these parameters are the block which we will be splitting and the size we will be using from this block
+void* split(Block* inputBlock, size_t size) // these parameters are the block which we will be splitting and the size we will be using from this block
 {
-    left = (void*)((void*)fitting_slot + sizeof(Block));
-    right = (void*)((void*)fitting_slot + size + 2 * sizeof(Block));
+    //left = (void*)((void*)fitting_slot + sizeof(Block));
+    //right = (void*)((void*)fitting_slot + size + 2 * sizeof(Block));
 
-    Block* leftBlock = left;
-    Block* rightBlock = right;
+    Block* leftBlock = inputBlock;
+    Block* rightBlock = inputBlock + size + sizeof(Block);
 
+    leftBlock->nextBlock = rightBlock;
     leftBlock->size = size;
-    leftBlock->free = 0;
-    leftBlock->nextBlock = right;
-    leftBlock->prevBlock = fitting_slot -> prevBlock;
+    leftBlock->free = 1;
 
     /*
     These lines above show how the new block of memory in the structure is allocated. A new block of memory is created and its parameters are filled.
     This new Block struct will serve as the new free part of the structure, since its free variable is set to 1.
     */
 
-    rightBlock->size = (fitting_slot->size) - size - sizeof(Block);
-    rightBlock->free = 1;
-    rightBlock->nextBlock = fitting_slot->nextBlock;
-    rightBlock->prevBlock = left;
+    rightBlock->size = (inputBlock->size) - size - sizeof(Block);
+    rightBlock->free = 0;
+    rightBlock->nextBlock = inputBlock->nextBlock;
+    rightBlock->prevBlock = leftBlock;
 
-    printf("%p is free %d\n", leftBlock, leftBlock->free);
-    printf("%p is free %d\n", rightBlock, rightBlock->free);
+    tail = rightBlock;
+
+    /*printf("%p is free %d\n", leftBlock, leftBlock->free);
+    printf("%p is free %d\n", rightBlock, rightBlock->free);*/
+
+    return ((void*)rightBlock);
 
     //fitting_slot->nextBlock = left;
-    fitting_slot = left;
+    //inputBlock = leftBlock;
 
     /*
     Fitting slot will be used to store the used storage area. It will also connect with the new block through a nextBlock pointer in the structure.
     */
 }
 
+/*static void* memory = 0;
+Block* head;
+Block* tail;*/
+
 void* new_malloc(size_t size)
 {
-    Block* freeList = memory;
+    /*Block* head = memory;
+    Block* tail; */
     void* result;
+    head = memory;
 
     if(memory == 0)
     {
-        static Block* next;
         memory = sbrk(8192);
 
-        freeList = memory;
-        next = memory + sizeof(Block)*2 + size;
+        head = memory;
+        tail = memory;
 
-        freeList->size = size; 
-        freeList->free = 0;
-        freeList->nextBlock = next;
-        freeList->prevBlock = NULL; 
-
-        next->free = 1;
-        next->nextBlock = NULL;
-        next->prevBlock = freeList;
-        next->size = 8192 - size - sizeof(Block)*2;
+        head->free = 0;
+        head->size = 8192 - sizeof(Block);
+        head->nextBlock = NULL;
+        head->prevBlock = NULL;
 
         printf("Memory initialized\n");
 
-        return (void*)freeList;
+        //return (void*)freeList;
     }
-    else
+    
+    
+    Block* temp = head;
+    while(temp/*->nextBlock*/ != NULL)
     {
-        Block* temp = freeList;
-        while(freeList/*->nextBlock*/ != NULL)
+        printf("%p \n", temp);
+
+        if(temp->free == 0)
         {
-            printf("%p \n", freeList);
 
-            if(freeList->free == 1)
+            if((temp->size) == size + sizeof(Block))
             {
+                Block* next = temp + size + sizeof(Block);//by setting the pointer to a value in the heap C automatically stores the pointer variable in the heap as well
 
-                if((freeList->size) == size + sizeof(Block))
+                temp->free = 1; //no longer free
+                temp->nextBlock = NULL;
+                temp->prevBlock = NULL;
+                temp->size = size;
+
+                result = (void*)(temp + 1);
+
+                printf("Exact fitting block allocated\n");
+
+                return result;
+            }
+            else if((temp->size) > size + sizeof(Block))
+            {
+                result = split(temp, size);
+
+                printf("Fitting block allocated with a split\n");
+
+                return result;
+            }
+            else //if((temp->size) < size + sizeof(Block))
+            {
+                //create new block of size 8192 bytes - sizeof(Block) - which starts at the memory address returned by sbrk when called
+
+                if(temp->nextBlock == NULL)
                 {
-                    freeList->free = 0;
-                    result = (void*)(++freeList);
+                    Block* new = sbrk(8192);
 
-                    printf("Exact fitting block allocated\n");
+                    result = sbrk(8192) + sizeof(Block) + size + 1; 
+
+                    printf("Adding new memory to the heap \n");
 
                     return result;
-                }
-                else if((freeList->size) > size + sizeof(Block))
-                {
-                    split(freeList, size);
-                    //result = (void*)(++freeList);
-
-                    printf("Fitting block allocated with a split\n");
-
-                    return result;
-                }
-                else if((freeList->size) < size + sizeof(Block))
-                {
-                    //create new block of size 8192 bytes - sizeof(Block) - which starts at the memory address returned by sbrk when called
-
-                    if(freeList->nextBlock != NULL)
-                    {
-
-                    }
-                    else
-                    {
-                        Block* new = sbrk(8192);
-
-                        /*freeList->nextBlock = new;
-
-                        new->free = 1;
-                        new->size = 8192 - sizeof(Block);
-                        new->prevBlock = freeList;
-                        new->nextBlock = NULL;*/
-
-                        result = sbrk(8192) + sizeof(Block) + size + 1; 
-
-                        printf("Adding new memory to the heap \n");
-
-                        return result;
-                    }
-
                 }
                 else
                 {
-                    printf("ERROR");
+                    //if not the final block of current allocated heap memory do nothing 
+                    //because it would not allow for fragmentation avoidance
                 }
-                
+
             }
-            else
-            {
-                /* code */
-            }
-
-            freeList = freeList->nextBlock;
-
-
+            
         }
+        else
+        {
+            
+        }
+
+        temp = temp->nextBlock;
+
+
     }
+    
 }
 
 int main()
 {
-    new_malloc(920);
-    new_malloc(120);
+    /*Block* head = memory;
+    Block* tail;*/
+
+    new_malloc(8192 - sizeof(Block) * 2);
+    //new_malloc(120);
     //new_malloc(10);
 
 }
