@@ -12,6 +12,7 @@ typedef struct Block
 }Block;
 
 static void* memory = 0;
+static void* endOfHeap;
 Block* head;
 Block* tail;
 
@@ -24,6 +25,7 @@ void* split(Block* inputBlock, size_t size) // these parameters are the block wh
     Block* rightBlock = inputBlock + size + sizeof(Block);
 
     leftBlock->nextBlock = rightBlock;
+    leftBlock->prevBlock = inputBlock->prevBlock;
     leftBlock->size = size;
     leftBlock->free = 1;
 
@@ -42,7 +44,7 @@ void* split(Block* inputBlock, size_t size) // these parameters are the block wh
     /*printf("%p is free %d\n", leftBlock, leftBlock->free);
     printf("%p is free %d\n", rightBlock, rightBlock->free);*/
 
-    return ((void*)rightBlock);
+    return ((void*)(rightBlock + sizeof(Block)));
 
     //fitting_slot->nextBlock = left;
     //inputBlock = leftBlock;
@@ -66,6 +68,10 @@ void* new_malloc(size_t size)
     if(memory == 0)
     {
         memory = sbrk(8192);
+        endOfHeap = memory + 8192;
+        //long length = endOfHeap - memory;
+
+        printf("Memory starts at %p and ends at %p - length is 8192 \n", memory, endOfHeap);
 
         head = memory;
         tail = memory;
@@ -98,7 +104,7 @@ void* new_malloc(size_t size)
                 temp->prevBlock = NULL;
                 temp->size = size;
 
-                result = (void*)(temp + 1);
+                result = (void*)(temp + sizeof(Block));
 
                 printf("Exact fitting block allocated\n");
 
@@ -118,9 +124,32 @@ void* new_malloc(size_t size)
 
                 if(temp->nextBlock == NULL)
                 {
-                    Block* new = sbrk(8192);
+                    /*if(endOfHeap + 1 == sbrk(0))
+                    {
 
-                    result = sbrk(8192) + sizeof(Block) + size + 1; 
+                    }
+                    else
+                    {
+                        
+                    }*/
+                    
+                    sbrk(8192);
+
+                    int tempInit = temp->size;
+
+                    temp->size = size;
+                    temp->nextBlock = NULL;
+                    temp->prevBlock = temp->prevBlock;
+                    temp->free = 1;
+
+                    Block* next = temp + sizeof(Block) + size;
+
+                    next->size = 8192 - (size - (tempInit - sizeof(Block)));
+                    next->nextBlock = NULL;
+                    next->prevBlock = temp->prevBlock;
+                    next->free = 1;
+
+                    //result = new + sizeof(Block) + size + 1; 
 
                     printf("Adding new memory to the heap \n");
 
@@ -149,11 +178,14 @@ void* new_malloc(size_t size)
 
 int main()
 {
-    /*Block* head = memory;
-    Block* tail;*/
-
-    new_malloc(8192 - sizeof(Block) * 2);
-    //new_malloc(120);
-    //new_malloc(10);
-
+    //new_malloc(8192 - sizeof(Block) * 2);
+    new_malloc(1120);
+    new_malloc(1120);
+    new_malloc(1120);
+    new_malloc(6000);
+    /*new_malloc(10);
+    new_malloc(120);
+    new_malloc(10);
+    new_malloc(120);
+    new_malloc(10);*/
 }
