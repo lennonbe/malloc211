@@ -62,6 +62,7 @@ void* new_malloc(size_t size)
         //long length = endOfHeap - memory;
 
         printf("Memory starts at %p and ends at %p - length is 8192 \n", memory, endOfHeap);
+        printf("%ld \n", sizeof(Block));
 
         head = memory;
         tail = memory;
@@ -80,10 +81,12 @@ void* new_malloc(size_t size)
     Block* temp = head;
     while(temp/*->nextBlock*/ != NULL)
     {
-        printf("%p \n", temp);
+        //printf("%p is a used mem address\n", temp);
 
         if(temp->free == 0)
         {
+            printf("%p is a free mem address\n", temp);
+
             if((temp->size) == (size + sizeof(Block)))
             {
                 Block* next = temp + size + sizeof(Block);//by setting the pointer to a value in the heap C automatically stores the pointer variable in the heap as well
@@ -113,18 +116,6 @@ void* new_malloc(size_t size)
                 if(temp->nextBlock == NULL) //we are currently on last block
                 {
                     printf("WORKING 1");
-                    /*if(endOfHeap + 1 == sbrk(0))
-                    {
-
-                    }
-                    else
-                    {
-                        
-                    }*/
-
-                    //void* newHeap;
-                    //newHeap = sbrk(8192);
-                    //newHeap = sbrk(0);
 
                     Block* next = sbrk(8192);
                     Block* next2 = next + size + sizeof(Block);
@@ -170,7 +161,7 @@ void* new_malloc(size_t size)
         }
         else
         {
-            printf("else \n");
+            printf("%p is a used mem address\n", temp);
         }
 
         temp = temp->nextBlock;
@@ -186,5 +177,5 @@ int main()
     new_malloc(1120);
     new_malloc(1120);
     new_malloc(1120);
-    new_malloc(6000);
+    new_malloc(1120);
 }
