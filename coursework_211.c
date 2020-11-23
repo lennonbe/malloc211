@@ -132,24 +132,29 @@ void* new_malloc(size_t size)
                     {
                         
                     }*/
-                    
-                    sbrk(8192);
 
-                    int tempInit = temp->size;
+                    //void* newHeap;
+                    //newHeap = sbrk(8192);
+                    //newHeap = sbrk(0);
 
-                    temp->size = size;
-                    temp->nextBlock = NULL;
-                    temp->prevBlock = temp->prevBlock;
-                    temp->free = 1;
+                    Block* next = sbrk(8192);
+                    Block* next2 = next + size + sizeof(Block);
 
-                    Block* next = temp + sizeof(Block) + size;
-
-                    next->size = 8192 - (size - (tempInit - sizeof(Block)));
-                    next->nextBlock = NULL;
-                    next->prevBlock = temp->prevBlock;
+                    next->size = size;
+                    next->nextBlock = next2;
+                    next->prevBlock = temp;
                     next->free = 1;
 
-                    //result = new + sizeof(Block) + size + 1; 
+                    //int tempInit = temp->size;
+
+                    next2->size = 8192 - size - sizeof(Block) * 2;
+                    next2->nextBlock = NULL;
+                    next2->prevBlock = next;
+                    next2->free = 0;
+
+                    temp->nextBlock = next;
+
+                    result = (void*)(next + sizeof(Block));
 
                     printf("Adding new memory to the heap \n");
 
