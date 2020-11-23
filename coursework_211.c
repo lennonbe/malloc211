@@ -18,35 +18,24 @@ Block* tail;
 
 void* split(Block* inputBlock, size_t size) // these parameters are the block which we will be splitting and the size we will be using from this block
 {
-    Block* leftBlock = inputBlock;
     Block* rightBlock = inputBlock + size + sizeof(Block);
 
-    leftBlock->nextBlock = rightBlock;
-    leftBlock->prevBlock = inputBlock->prevBlock;
-    leftBlock->size = size;
-    leftBlock->free = 1;
+    size_t temp = inputBlock->size;
 
-    /*
-    These lines above show how the new block of memory in the structure is allocated. A new block of memory is created and its parameters are filled.
-    This new Block struct will serve as the new free part of the structure, since its free variable is set to 1.
-    */
+    inputBlock->nextBlock = rightBlock;
+    //inputBlock->prevBlock = inputBlock->prevBlock;
+    inputBlock->size = size;
+    inputBlock->free = 1;
 
-    rightBlock->size = (inputBlock->size) - size - sizeof(Block);
+    rightBlock->size = /*(inputBlock->size)*/temp - size - sizeof(Block);
     rightBlock->free = 0;
-    rightBlock->nextBlock = inputBlock->nextBlock;
-    rightBlock->prevBlock = leftBlock;
+    rightBlock->nextBlock = NULL;
+    rightBlock->prevBlock = inputBlock;
 
-    tail = rightBlock;
+    //tail = rightBlock;
 
     return ((void*)(rightBlock + sizeof(Block)));
-    /*
-    Fitting slot will be used to store the used storage area. It will also connect with the new block through a nextBlock pointer in the structure.
-    */
 }
-
-/*static void* memory = 0;
-Block* head;
-Block* tail;*/
 
 void* new_malloc(size_t size)
 {
@@ -73,19 +62,20 @@ void* new_malloc(size_t size)
         head->prevBlock = NULL;
 
         printf("Memory initialized\n");
-
-        //return (void*)freeList;
     }
     
     
     Block* temp = head;
     while(temp/*->nextBlock*/ != NULL)
     {
-        //printf("%p is a used mem address\n", temp);
+        printf("%p\n", temp);
 
         if(temp->free == 0)
         {
+            //printf("%p is a free mem address\n", temp);
             printf("%p is a free mem address\n", temp);
+            printf("It has size %ld\n", temp -> size);
+            
 
             if((temp->size) == (size + sizeof(Block)))
             {
@@ -112,6 +102,7 @@ void* new_malloc(size_t size)
             }
             else //if((temp->size) < size + sizeof(Block))
             {
+                printf("IM HERE");
                 //create new block of size 8192 bytes - sizeof(Block) - which starts at the memory address returned by sbrk when called
                 if(temp->nextBlock == NULL) //we are currently on last block
                 {
@@ -162,6 +153,7 @@ void* new_malloc(size_t size)
         else
         {
             printf("%p is a used mem address\n", temp);
+            printf("It has size %ld\n", temp -> size);
         }
 
         temp = temp->nextBlock;
@@ -174,8 +166,29 @@ void* new_malloc(size_t size)
 int main()
 {
     //new_malloc(8192 - sizeof(Block) * 2);
-    new_malloc(1120);
-    new_malloc(1120);
-    new_malloc(1120);
-    new_malloc(1120);
+    new_malloc(500);
+    printf("----------------------------------------- \n");
+    new_malloc(500);
+    printf("----------------------------------------- \n");
+    new_malloc(500);
+    printf("----------------------------------------- \n");
+    new_malloc(500);
+    printf("----------------------------------------- \n");
+    new_malloc(500);
+    printf("----------------------------------------- \n");
+    new_malloc(500);
+    printf("----------------------------------------- \n");
+    new_malloc(500);
+    printf("----------------------------------------- \n");
+    new_malloc(500);
+    printf("----------------------------------------- \n");
+    new_malloc(500);
+    printf("----------------------------------------- \n");
+    new_malloc(500);
+    printf("----------------------------------------- \n");
+    //new_malloc(1120);
+    //printf("----------------------------------------- \n");
+    //new_malloc(5856 - sizeof(Block));
+    //printf("----------------------------------------- \n");
+    //new_malloc(1120);
 }
