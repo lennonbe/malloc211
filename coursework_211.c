@@ -17,24 +17,24 @@ Block* tail = NULL;
 
 void split(Block* inputBlock, size_t size) // these parameters are the block which we will be splitting and the size we will be using from this block
 {
-    //Block* leftBlock = inputBlock;
-    Block* rightBlock = inputBlock + size + sizeof(Block);
+    Block* new = (void*)inputBlock + size + sizeof(Block);
 
-    rightBlock->size = (inputBlock->size) - size - sizeof(Block);
-    rightBlock->free = 0;
-    rightBlock->prevBlock = inputBlock;
+    new->size = (inputBlock->size) - size - sizeof(Block);
+    new->free = 0;
+    new->prevBlock = inputBlock;
 
-    inputBlock->nextBlock = rightBlock;
+    inputBlock->nextBlock = new;
     inputBlock->size = size;
     inputBlock->free = 1;
-
-    //return ((void*)(rightBlock + sizeof(Block)) + 1);
 }
+
+void* result;
+Block* temp;
 
 void* new_malloc(size_t size)
 {
-    void* result;
-    Block* temp;
+    //void* result;
+    //Block* temp;
 
     if(head == NULL)
     {
@@ -54,7 +54,6 @@ void* new_malloc(size_t size)
     temp = head;
     while(temp != NULL)
     {        
-        //printf("%p - %ld - %d - %p \n", temp, temp->size,temp->free, temp->nextBlock);
         if(temp->free == 0)
         {          
             if((temp->size) == (size + sizeof(Block)))
@@ -79,7 +78,6 @@ void* new_malloc(size_t size)
 
         temp = temp->nextBlock;
     }
-    
 }
 
 int main()
@@ -91,12 +89,19 @@ int main()
     void* addr1;
     void* addr2;
     void* addr3;
+    void* addr4;
+    void* addr5;
+    void* addr6;
+    
 
     addr1 = new_malloc(100); 
     addr2 = new_malloc(100);
-    //new_free(addr2); 
-    //addr3 = new_malloc(100);
-    printf( "Addr1 = %p, Addr2 = %p, Addr3 = %p \n", addr1, addr2, addr3);
+    addr3 = new_malloc(100);
+    addr4 = new_malloc(100);
+    addr5 = new_malloc(100);
+    addr6 = new_malloc(100);
+    
+    printf( "Addr1 = %p, Addr2 = %p, Addr3 = %p, Addr4 = %p, Addr5 = %p, Addr6 = %p\n", addr1, addr2, addr3, addr4, addr5, addr6);
     printf("%ld \n", sizeof(Block));
 
 
