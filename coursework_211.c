@@ -7,158 +7,77 @@ typedef struct Block
     size_t size; //size of this block
     struct Block* nextBlock; //pointer to next meta-data block
     struct Block* prevBlock; //pointer to the previous meta-data block
-    int free; //used as a flag to know wether block is free or not (set to 1 if free, 0 otherwise)
+    int free; //used as a flag to know wether block is free or not (set to 0 if free, 1 otherwise)
     int prevFree;
+
 }Block;
 
-static void* memory = 0;
-static void* endOfHeap;
-Block* head;
-Block* tail;
+Block* head = NULL;
+Block* tail = NULL;
 
-void* split(Block* inputBlock, size_t size) // these parameters are the block which we will be splitting and the size we will be using from this block
+void split(Block* inputBlock, size_t size) // these parameters are the block which we will be splitting and the size we will be using from this block
 {
+    //Block* leftBlock = inputBlock;
     Block* rightBlock = inputBlock + size + sizeof(Block);
 
-    size_t temp = inputBlock->size;
+    rightBlock->size = (inputBlock->size) - size - sizeof(Block);
+    rightBlock->free = 0;
+    rightBlock->prevBlock = inputBlock;
 
     inputBlock->nextBlock = rightBlock;
-    //inputBlock->prevBlock = inputBlock->prevBlock;
     inputBlock->size = size;
     inputBlock->free = 1;
 
-    rightBlock->size = /*(inputBlock->size)*/temp - size - sizeof(Block);
-    rightBlock->free = 0;
-    rightBlock->nextBlock = NULL;
-    rightBlock->prevBlock = inputBlock;
-
-    //tail = rightBlock;
-
-    return ((void*)(rightBlock + sizeof(Block)));
+    //return ((void*)(rightBlock + sizeof(Block)) + 1);
 }
 
 void* new_malloc(size_t size)
 {
-    /*Block* head = memory;
-    Block* tail; */
     void* result;
-    head = memory;
+    Block* temp;
 
-    if(memory == 0)
+    if(head == NULL)
     {
-        memory = sbrk(8192);
-        endOfHeap = memory + 8192;
-        //long length = endOfHeap - memory;
-
-        printf("Memory starts at %p and ends at %p - length is 8192 \n", memory, endOfHeap);
-        printf("%ld \n", sizeof(Block));
-
-        head = memory;
-        tail = memory;
+        head = sbrk(8192);
 
         head->free = 0;
         head->size = 8192 - sizeof(Block);
         head->nextBlock = NULL;
         head->prevBlock = NULL;
 
-        printf("Memory initialized\n");
+        split(head, size);
+        result = head;
+
+        return result;
     }
     
-    
-    Block* temp = head;
-    while(temp/*->nextBlock*/ != NULL)
-    {
-        printf("%p\n", temp);
-
+    temp = head;
+    while(temp != NULL)
+    {        
+        //printf("%p - %ld - %d - %p \n", temp, temp->size,temp->free, temp->nextBlock);
         if(temp->free == 0)
-        {
-            //printf("%p is a free mem address\n", temp);
-            printf("%p is a free mem address\n", temp);
-            printf("It has size %ld\n", temp -> size);
-            
-
+        {          
             if((temp->size) == (size + sizeof(Block)))
             {
-                Block* next = temp + size + sizeof(Block);//by setting the pointer to a value in the heap C automatically stores the pointer variable in the heap as well
-
-                temp->free = 1; //no longer free
+                temp->free = 1;
                 temp->nextBlock = NULL;
                 temp->prevBlock = NULL;
                 temp->size = size;
 
-                result = (void*)(temp + sizeof(Block));
-
-                printf("Exact fitting block allocated\n");
+                result = ((void*)((long)temp + sizeof(Block)));
 
                 return result;
             }
             else if((temp->size) > (size + sizeof(Block)))
             {
-                result = split(temp, size);
+                split(temp, size);
+                result = temp;
 
-                printf("Fitting block allocated with a split\n");
-
-                return result;
-            }
-            else //if((temp->size) < size + sizeof(Block))
-            {
-                printf("IM HERE");
-                //create new block of size 8192 bytes - sizeof(Block) - which starts at the memory address returned by sbrk when called
-                if(temp->nextBlock == NULL) //we are currently on last block
-                {
-                    printf("WORKING 1");
-
-                    Block* next = sbrk(8192);
-                    Block* next2 = next + size + sizeof(Block);
-
-                    printf("WORKING 2");
-
-                    next->size = size;
-                    next->nextBlock = next2;
-                    next->prevBlock = temp;
-                    next->free = 1;
-
-                    printf("WORKING 3");
-
-                    //int tempInit = temp->size;
-
-                    next2->size = 8192 - size - sizeof(Block) * 2;
-                    next2->nextBlock = NULL;
-                    next2->prevBlock = next;
-                    next2->free = 0;
-
-                    printf("WORKING 4");
-
-                    temp->nextBlock = next;
-
-                    printf("WORKING 5");
-
-                    result = (void*)(next + sizeof(Block));
-
-                    printf("WORKING 6");
-
-                    printf("Adding new memory to the heap \n");
-
-                    return result;
-                }
-                else
-                {
-                    //if not the final block of current allocated heap memory do nothing 
-                    //because it would not allow for fragmentation avoidance
-                }
-
-            }
-            
-        }
-        else
-        {
-            printf("%p is a used mem address\n", temp);
-            printf("It has size %ld\n", temp -> size);
+                return (void*)((long) result + sizeof(Block));
+            }                        
         }
 
         temp = temp->nextBlock;
-
-
     }
     
 }
@@ -166,29 +85,19 @@ void* new_malloc(size_t size)
 int main()
 {
     //new_malloc(8192 - sizeof(Block) * 2);
-    new_malloc(500);
-    printf("----------------------------------------- \n");
-    new_malloc(500);
-    printf("----------------------------------------- \n");
-    new_malloc(500);
-    printf("----------------------------------------- \n");
-    new_malloc(500);
-    printf("----------------------------------------- \n");
-    new_malloc(500);
-    printf("----------------------------------------- \n");
-    new_malloc(500);
-    printf("----------------------------------------- \n");
-    new_malloc(500);
-    printf("----------------------------------------- \n");
-    new_malloc(500);
-    printf("----------------------------------------- \n");
-    new_malloc(500);
-    printf("----------------------------------------- \n");
-    new_malloc(500);
-    printf("----------------------------------------- \n");
-    //new_malloc(1120);
-    //printf("----------------------------------------- \n");
-    //new_malloc(5856 - sizeof(Block));
-    //printf("----------------------------------------- \n");
-    //new_malloc(1120);
+    //new_malloc(500);
+    //new_malloc(500);
+
+    void* addr1;
+    void* addr2;
+    void* addr3;
+
+    addr1 = new_malloc(100); 
+    addr2 = new_malloc(100);
+    //new_free(addr2); 
+    //addr3 = new_malloc(100);
+    printf( "Addr1 = %p, Addr2 = %p, Addr3 = %p \n", addr1, addr2, addr3);
+    printf("%ld \n", sizeof(Block));
+
+
 }
