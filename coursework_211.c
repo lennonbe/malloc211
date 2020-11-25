@@ -140,26 +140,51 @@ void* new_malloc(size_t size)
 
 void new_free(void* address)
 {
-    Block* temp1;
-    Block* temp2;
+    Block* A;
+    Block* B;
     Block* curr = address;
     --curr;
-    curr->free = 0;
+    //curr->free = 0;
 
     //this is where the normal implementation ends
 
-    temp1 = head;
-    temp2 = curr;
-    
-    head = curr;
-    head->nextBlock = temp1;
-    head->size = curr->size;
-    head->free = 0;
-
-    if(curr->nextBlock != NULL)
+    if(head->nextBlock == curr)
     {
-        curr->prevBlock->nextBlock ==
+        A = head;
+        B = curr;
+
+        A->prevBlock = head;
+        A->nextBlock = B->nextBlock;
+        A->size = head->size;
+        A->free = head->free;
+
+        head = curr;
+
+        head->nextBlock = A;
+        head->prevBlock = NULL;
+        head->free = 0;
+        head->size = curr->size;
+
     }
+    else
+    {
+        A = head;
+        B = curr;
+
+        A->prevBlock = head;
+        A->nextBlock = B->nextBlock;
+        A->size = head->size;
+        A->free = head->free;
+
+        head = curr;
+
+        head->nextBlock = A;
+        head->prevBlock = NULL;
+        head->free = 0;
+        head->size = curr->size;
+
+    }
+    
 
 }
 
@@ -185,7 +210,8 @@ void debugPrint()
     }
 }
 
-/*void userInterface()
+/*
+void userInterface()
 {
     int flag = 0;
     while(flag != 1)
@@ -212,7 +238,8 @@ void debugPrint()
     }
 }*/
 
-/*void my_free(void *ptr)
+/*
+void my_free(void *ptr)
 {
     Block* current = (void*)((long)ptr - sizeof(Block));
     current->free = 0;
@@ -259,12 +286,11 @@ int main()
 
     addr1 = new_malloc(100); 
     addr2 = new_malloc(100);
-    addr3 = new_malloc(100);
-    addr4 = new_malloc(100);
-    addr5 = new_malloc(100);
+    addr3 = new_malloc(101);
+    addr4 = new_malloc(102);
+    addr5 = new_malloc(103);
 
-    //my_free(addr4);
-    //my_free(addr5);
+    new_free(addr2);
 
     //new_malloc(50);
 
