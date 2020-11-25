@@ -8,7 +8,6 @@ typedef struct Block
     struct Block* nextBlock; //pointer to next meta-data block
     struct Block* prevBlock; //pointer to the previous meta-data block
     int free; //used as a flag to know wether block is free or not (set to 0 if free, 1 otherwise)
-    int prevFree;
 
 }Block;
 
@@ -33,9 +32,6 @@ Block* temp;
 
 void* new_malloc(size_t size)
 {
-    //void* result;
-    //Block* temp;
-
     if(head == NULL)
     {
         head = sbrk(8192);
@@ -50,7 +46,7 @@ void* new_malloc(size_t size)
 
         return result;
     }
-    
+
     temp = head;
     while(temp != NULL)
     {        
@@ -73,7 +69,28 @@ void* new_malloc(size_t size)
                 result = temp;
 
                 return (void*)((long) result + sizeof(Block));
-            }                        
+            }
+            else
+            {
+                if(temp->nextBlock == NULL)
+                {
+                    Block* new;
+                    new = sbrk(8192);
+
+                    temp->nextBlock = new;
+
+                    new->prevBlock = temp;
+                    new->nextBlock = NULL;
+                    new->size = 8192 - sizeof(Block);
+                    new->free = 0;
+
+                    split(new, size);
+
+                    result = new;
+
+                    return (void*)((long) result + sizeof(Block));
+                }
+            }                         
         }
 
         temp = temp->nextBlock;
@@ -99,8 +116,8 @@ int main()
     addr3 = new_malloc(100);
     addr4 = new_malloc(100);
     addr5 = new_malloc(100);
-    addr6 = new_malloc(100);
-    
+    addr6 = new_malloc(8000);
+
     printf( "Addr1 = %p, Addr2 = %p, Addr3 = %p, Addr4 = %p, Addr5 = %p, Addr6 = %p\n", addr1, addr2, addr3, addr4, addr5, addr6);
     printf("%ld \n", sizeof(Block));
 
