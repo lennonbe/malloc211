@@ -97,6 +97,52 @@ void* new_malloc(size_t size)
     }
 }
 
+void new_free(void* address)
+{
+    /*Block* temp = head;
+    Block* temp2 = (Block*)address;
+
+    while(temp != NULL)
+    {
+        if(temp == temp2)
+        {
+            temp->free = 0;
+        }
+        else
+        {
+            //printf("ERROR - INVALID ADDRESS");
+        }
+        
+        temp = temp->nextBlock;
+    }*/
+
+    Block* curr = address;
+    --curr;
+    curr->free = 0;
+}
+
+void debugPrint()
+{
+    Block *temp = head;
+    int i = 0;
+    while(temp != NULL)
+    {
+        printf("%d - %p | previous - %p | next - %p | size - %zu | flag - %d ", i,temp,temp->prevBlock,temp->nextBlock, temp->size, temp->free);
+
+        unsigned char *debug = (unsigned char*)temp;
+
+        for (int j = 0; j < temp->size + sizeof(Block); j++)
+        {
+            printf("%02x",debug[j]);
+        }
+
+        temp = temp->nextBlock;
+        i++;
+
+        printf("\n");
+    }
+}
+
 int main()
 {
     //new_malloc(8192 - sizeof(Block) * 2);
@@ -116,10 +162,14 @@ int main()
     addr3 = new_malloc(100);
     addr4 = new_malloc(100);
     addr5 = new_malloc(100);
-    addr6 = new_malloc(8000);
+
+    new_free(addr5);
+    //addr6 = new_malloc(8000);
 
     printf( "Addr1 = %p, Addr2 = %p, Addr3 = %p, Addr4 = %p, Addr5 = %p, Addr6 = %p\n", addr1, addr2, addr3, addr4, addr5, addr6);
     printf("%ld \n", sizeof(Block));
+
+    debugPrint();
 
 
 }
