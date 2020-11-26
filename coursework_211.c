@@ -140,8 +140,8 @@ void* new_malloc(size_t size)
 
 void new_free(void* address)
 {
-    Block* A;
-    Block* B;
+    Block* prevHead;
+    Block* currentHolder;
     Block* curr = address;
     --curr;
     //curr->free = 0;
@@ -150,17 +150,19 @@ void new_free(void* address)
 
     if(head->nextBlock == curr)
     {
-        A = head;
-        B = curr;
+        prevHead = head;
+        currentHolder = curr;
 
-        A->prevBlock = head;
-        A->nextBlock = B->nextBlock;
-        A->size = head->size;
-        A->free = head->free;
+        prevHead->nextBlock = curr->nextBlock; //if it bugs i changed it from B to curr
+        prevHead->size = head->size;
+        prevHead->free = head->free;
 
         head = curr;
 
-        head->nextBlock = A;
+        prevHead->prevBlock = head;
+        prevHead->nextBlock->prevBlock = prevHead; 
+
+        head->nextBlock = prevHead;
         head->prevBlock = NULL;
         head->free = 0;
         head->size = curr->size;
@@ -168,24 +170,45 @@ void new_free(void* address)
     }
     else
     {
-        A = head;
-        B = curr;
+        prevHead = head;
 
-        A->prevBlock = head;
-        A->nextBlock = B->nextBlock;
-        A->size = head->size;
-        A->free = head->free;
+        /*
+        currentHolder->size = curr->size;
+        currentHolder->prevBlock = curr->prevBlock;
+        currentHolder->nextBlock = curr->nextBlock;
+        currentHolder->free = curr->free;
+        */
+
+        prevHead->nextBlock = curr->nextBlock;
+        prevHead->size = head->size;
+        prevHead->free = head->free;
 
         head = curr;
 
-        head->nextBlock = A;
+        prevHead->prevBlock = head;
+        prevHead->nextBlock->prevBlock = prevHead; 
+
+        head->nextBlock = prevHead;
         head->prevBlock = NULL;
         head->free = 0;
         head->size = curr->size;
 
-    }
-    
+        /*curr->prevBlock->nextBlock = curr->nextBlock;
+        curr->nextBlock->prevBlock = curr->prevBlock;*/
 
+        if(curr->nextBlock != NULL)
+        {
+            curr->nextBlock->prevBlock = curr->prevBlock;
+            //curr->prevBlock->nextBlock = curr->nextBlock;
+        }
+
+        if(curr->prevBlock != NULL)
+        {
+            //curr->nextBlock->prevBlock = curr->prevBlock;
+            curr->prevBlock->nextBlock = curr->nextBlock;
+        }
+
+    }
 }
 
 void debugPrint()
@@ -290,7 +313,7 @@ int main()
     addr4 = new_malloc(102);
     addr5 = new_malloc(103);
 
-    new_free(addr2);
+    new_free(addr4);
 
     //new_malloc(50);
 
