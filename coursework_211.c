@@ -172,16 +172,24 @@ void new_free(void* address)
         --curr;
     }
 
-    new = address;
+    new = (Block*)(address - sizeof(allocatedBlock));
 
     new->free = 0;
     new->nextBlock = head;
     new->prevBlock = NULL;
-    new->size = curr->size;
+    new->size = (curr->size) + sizeof(allocatedBlock) - sizeof(Block);
 
     head->prevBlock = new;
 
     head = new;
+    /*
+    temp = head;
+    while(temp != NULL)
+    {
+
+
+        temp = temp->nextBlock;
+    }*/
 }
 
 void debugPrint()
@@ -231,9 +239,6 @@ void userInterface()
         {
             flag = 0;
         }
-
-        /*int m=strlen(text);
-        printf(" text is %s %d\n",text,m);*/
         
     }
 }
@@ -256,6 +261,7 @@ int main()
     printf("%p \n", addr3);
     addr4 = new_malloc(102);
     addr5 = new_malloc(103);
+    printf("%p \n", addr5);
 
     //debugPrint();
 
@@ -264,6 +270,7 @@ int main()
     //debugPrint();
 
     new_free(addr3);
+    new_free(addr5);
 
     debugPrint();
 
