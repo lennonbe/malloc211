@@ -172,42 +172,34 @@ void new_free(void* address)
     {
         prevHead = head;
 
-        /*
-        currentHolder->size = curr->size;
-        currentHolder->prevBlock = curr->prevBlock;
-        currentHolder->nextBlock = curr->nextBlock;
-        currentHolder->free = curr->free;
-        */
-
-        prevHead->nextBlock = curr->nextBlock;
+        prevHead->nextBlock;// = curr->nextBlock; //if it bugs i changed it from B to curr
         prevHead->size = head->size;
         prevHead->free = head->free;
+        //prevHead->nextBlock = head//->nextBlock;
+        prevHead->nextBlock->prevBlock = head;
 
         head = curr;
 
         prevHead->prevBlock = head;
-        prevHead->nextBlock->prevBlock = prevHead; 
+        prevHead->nextBlock->prevBlock = prevHead;
+
+        curr->nextBlock->prevBlock = curr->prevBlock;
+        curr->prevBlock->nextBlock = curr->nextBlock;
 
         head->nextBlock = prevHead;
         head->prevBlock = NULL;
         head->free = 0;
         head->size = curr->size;
-
-        /*curr->prevBlock->nextBlock = curr->nextBlock;
-        curr->nextBlock->prevBlock = curr->prevBlock;*/
-
-        if(curr->nextBlock != NULL)
+    
+        /*if(curr->nextBlock == NULL)
         {
-            curr->nextBlock->prevBlock = curr->prevBlock;
+            curr->prevBlock->nextBlock = NULL;
+        }  
+        else
+        {
             //curr->prevBlock->nextBlock = curr->nextBlock;
-        }
-
-        if(curr->prevBlock != NULL)
-        {
-            //curr->nextBlock->prevBlock = curr->prevBlock;
-            curr->prevBlock->nextBlock = curr->nextBlock;
-        }
-
+        }*/
+          
     }
 }
 
@@ -312,6 +304,8 @@ int main()
     addr3 = new_malloc(101);
     addr4 = new_malloc(102);
     addr5 = new_malloc(103);
+
+    debugPrint();
 
     new_free(addr4);
 
