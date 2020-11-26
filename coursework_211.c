@@ -133,8 +133,10 @@ void* new_malloc(size_t size)
     }
     else if((smallest->size) > (size + sizeof(allocatedBlock)))
     {
-        result = split(smallest, size);
-        //result = smallest;
+        allocatedBlock* resultTemp = split(smallest, size);
+        result = (void*)resultTemp;
+
+        allocatedBlock* resultTemp2 = result;
 
         return ((void*)((long)result + sizeof(allocatedBlock)));
     }
@@ -152,11 +154,8 @@ void* new_malloc(size_t size)
             new->size = 8192 - sizeof(Block);
             new->free = 0;
 
-            result = split(new, size);
-
-            //result = new;
-
-            //removeFromFreeList(new);
+            allocatedBlock* resultTemp = split(new, size);
+            result = resultTemp;
 
             return ((void*)((long) result + sizeof(allocatedBlock)));
         }
@@ -165,63 +164,24 @@ void* new_malloc(size_t size)
 
 void new_free(void* address)
 {
-    Block* prevHead;
-    Block* currentHolder;
-    Block* curr = address;
+    allocatedBlock* curr = address;
+    Block* new;
 
-    if(curr != head && curr != programStart)
+    if(curr != programStart)
     {
         --curr;
     }
 
-    //this is where the normal implementation ends
+    new = address;
 
-    if(curr == head)
-    {
-        head->free = 0;
-    }
-    else if(head->nextBlock == curr)
-    {
-        prevHead = head;
-        currentHolder = curr;
+    new->free = 0;
+    new->nextBlock = head;
+    new->prevBlock = NULL;
+    new->size = curr->size;
 
-        prevHead->nextBlock = curr->nextBlock; //if it bugs i changed it from B to curr
-        prevHead->size = head->size;
-        prevHead->free = head->free;
+    head->prevBlock = new;
 
-        head = curr;
-
-        prevHead->prevBlock = head;
-        prevHead->nextBlock->prevBlock = prevHead; 
-
-        head->nextBlock = prevHead;
-        head->prevBlock = NULL;
-        head->free = 0;
-        head->size = curr->size;
-
-    }
-    else
-    {
-        prevHead = head;
-
-        prevHead->nextBlock;
-        prevHead->size = head->size;
-        prevHead->free = head->free;
-        prevHead->nextBlock->prevBlock = head;
-
-        head = curr;
-
-        prevHead->prevBlock = head;
-        prevHead->nextBlock->prevBlock = prevHead;
-
-        curr->nextBlock->prevBlock = curr->prevBlock;
-        curr->prevBlock->nextBlock = curr->nextBlock;
-
-        head->nextBlock = prevHead;
-        head->prevBlock = NULL;
-        head->free = 0;
-        head->size = curr->size;          
-    }
+    head = new;
 }
 
 void debugPrint()
@@ -245,32 +205,6 @@ void debugPrint()
         printf("\n");
     }
 }
-
-/*void userInterface()
-{
-    int flag = 0;
-    while(flag != 1)
-    {
-        char input;
-        char input2[70];
-
-        scanf("%c%ld", &input, &input2);
-
-        if(input == 'F')
-        {
-            new_free((void*)input2);
-        }
-        else if(input == 'A')
-        {
-            new_malloc(((long)input2));
-        }
-        else
-        {
-            printf("INVALID INPUT \n");
-        }
-        
-    }
-}*/
 
 void userInterface()
 {
@@ -323,7 +257,7 @@ int main()
     addr4 = new_malloc(102);
     addr5 = new_malloc(103);
 
-    debugPrint();
+    //debugPrint();
 
     new_free(addr1);
 
