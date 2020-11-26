@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stddef.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 
@@ -28,15 +29,15 @@ void split(Block* inputBlock, size_t size) // these parameters are the block whi
     inputBlock->free = 1;
 }
 
-void removeFromFreeList(Block* input)
+/*void removeFromFreeList(Block* input)
 {
     input->prevBlock->nextBlock = input->nextBlock;
     input->nextBlock->prevBlock = input->prevBlock;
     input->nextBlock = NULL;
     input->prevBlock = NULL; 
-}
+}*/
 
-Block* bestFit(size_t size)
+/*Block* bestFit(size_t size)
 {
     Block* temp = head;
     Block* smallest = head;
@@ -52,17 +53,19 @@ Block* bestFit(size_t size)
     }
 
     return smallest;
-}
+}*/
 
 void* result;
 Block* temp;
 Block* smallest;
+void* programStart;
 
 void* new_malloc(size_t size)
 {
     if(head == NULL)
     {
         head = sbrk(8192);
+        programStart = head;
 
         head->free = 0;
         head->size = 8192 - sizeof(Block);
@@ -111,7 +114,7 @@ void* new_malloc(size_t size)
         split(smallest, size);
         result = smallest;
 
-        return (void*)((long) result + sizeof(Block));
+        return ((void*)((long)result + sizeof(Block)));
     }
     else
     {
@@ -133,7 +136,7 @@ void* new_malloc(size_t size)
 
             //removeFromFreeList(new);
 
-            return (void*)((long) result + sizeof(Block));
+            return ((void*)((long) result + sizeof(Block)));
         }
     }
 }
@@ -143,12 +146,19 @@ void new_free(void* address)
     Block* prevHead;
     Block* currentHolder;
     Block* curr = address;
-    --curr;
-    //curr->free = 0;
+
+    if(curr != head && curr != programStart)
+    {
+        --curr;
+    }
 
     //this is where the normal implementation ends
 
-    if(head->nextBlock == curr)
+    if(curr == head)
+    {
+        head->free = 0;
+    }
+    else if(head->nextBlock == curr)
     {
         prevHead = head;
         currentHolder = curr;
@@ -172,10 +182,9 @@ void new_free(void* address)
     {
         prevHead = head;
 
-        prevHead->nextBlock;// = curr->nextBlock; //if it bugs i changed it from B to curr
+        prevHead->nextBlock;
         prevHead->size = head->size;
         prevHead->free = head->free;
-        //prevHead->nextBlock = head//->nextBlock;
         prevHead->nextBlock->prevBlock = head;
 
         head = curr;
@@ -189,17 +198,7 @@ void new_free(void* address)
         head->nextBlock = prevHead;
         head->prevBlock = NULL;
         head->free = 0;
-        head->size = curr->size;
-    
-        /*if(curr->nextBlock == NULL)
-        {
-            curr->prevBlock->nextBlock = NULL;
-        }  
-        else
-        {
-            //curr->prevBlock->nextBlock = curr->nextBlock;
-        }*/
-          
+        head->size = curr->size;          
     }
 }
 
@@ -225,8 +224,7 @@ void debugPrint()
     }
 }
 
-/*
-void userInterface()
+/*void userInterface()
 {
     int flag = 0;
     while(flag != 1)
@@ -235,7 +233,6 @@ void userInterface()
         char input2[70];
 
         scanf("%c%ld", &input, &input2);
-
 
         if(input == 'F')
         {
@@ -253,51 +250,46 @@ void userInterface()
     }
 }*/
 
-/*
-void my_free(void *ptr)
+void userInterface()
 {
-    Block* current = (void*)((long)ptr - sizeof(Block));
-    current->free = 0;
-    void* top = sbrk(0);
-    if(current >= head && (void*) current <= top)
+    int flag = 1;
+    printf("Enter A (malloc) or F (free) and the size or address: \n");
+
+    while(flag == 1)
     {
-        if(current->nextBlock != NULL && current->nextBlock->free == 0)
-        {
-            current->size = current->size + current->nextBlock->size + sizeof(Block);
-            current->nextBlock = current->nextBlock->nextBlock;
-            if(current->nextBlock != NULL && current->nextBlock->nextBlock != NULL)
-            {
-                current->nextBlock->nextBlock->prevBlock = current;
-            }
-        }
-        if(current->prevBlock != NULL && current->prevBlock->free == 0)
-        {
-            current->prevBlock->nextBlock = current->nextBlock;
-            current->prevBlock->size = current->prevBlock->size + current->size + sizeof(Block);
-            current->prevBlock->nextBlock = current->nextBlock;
-            if(current->prevBlock->prevBlock != NULL)
-            {
-                current->prevBlock->prevBlock->nextBlock = current;
-            }
+        char input[20];
+        scanf("%s", input);
 
+        if(input[0] == 'A')
+        {
+            char* final = input + 1;
+            printf("%p", new_malloc(atoi(final)));
+        }
+        else if(input[0] == 'F')
+        {
+            char* final = input + 1;
+            unsigned long pointer = strtoul(final,NULL,16);
+            new_free(pointer);
+        }
+        else
+        {
+            flag = 0;
         }
 
+        /*int m=strlen(text);
+        printf(" text is %s %d\n",text,m);*/
+        
     }
-}*/
+}
 
 int main()
 {
-    //new_malloc(8192 - sizeof(Block) * 2);
-    //new_malloc(500);
-    //new_malloc(500);
-
     void* addr1;
     void* addr2;
     void* addr3;
     void* addr4;
     void* addr5;
-    void* addr6;
-    
+    void* addr6;    
 
     addr1 = new_malloc(100); 
     addr2 = new_malloc(100);
@@ -305,11 +297,17 @@ int main()
     addr4 = new_malloc(102);
     addr5 = new_malloc(103);
 
-    debugPrint();
+    //debugPrint();
 
-    new_free(addr4);
+    //new_free(addr1);
 
-    //new_malloc(50);
+    //debugPrint();
 
-    debugPrint();
+    //new_free(addr3);
+
+    //debugPrint();
+
+    //new_free(addr1);
+
+    userInterface();
 }
