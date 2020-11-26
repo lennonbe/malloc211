@@ -13,47 +13,68 @@ typedef struct Block
 
 }Block;
 
+typedef struct allocatedBlock
+{
+    size_t size; //size of this block
+    int free; //used as a flag to know wether block is free or not (set to 0 if free, 1 otherwise)
+
+}allocatedBlock;
+
 Block* head = NULL;
 Block* tail = NULL;
 
-void split(Block* inputBlock, size_t size) // these parameters are the block which we will be splitting and the size we will be using from this block
+allocatedBlock* split(Block* inputBlock, size_t size) // these parameters are the block which we will be splitting and the size we will be using from this block
 {
-    Block* new = (void*)inputBlock + size + sizeof(Block);
+    Block* new = (void*)inputBlock + size + sizeof(allocatedBlock);
+    allocatedBlock* allocated;
 
-    new->size = (inputBlock->size) - size - sizeof(Block);
-    new->free = 0;
-    new->prevBlock = inputBlock;
-
-    inputBlock->nextBlock = new;
-    inputBlock->size = size;
-    inputBlock->free = 1;
-}
-
-/*void removeFromFreeList(Block* input)
-{
-    input->prevBlock->nextBlock = input->nextBlock;
-    input->nextBlock->prevBlock = input->prevBlock;
-    input->nextBlock = NULL;
-    input->prevBlock = NULL; 
-}*/
-
-/*Block* bestFit(size_t size)
-{
-    Block* temp = head;
-    Block* smallest = head;
-
-    while(temp != NULL)
+    if(inputBlock == head)
     {
-        if((long)temp->size >= (long)(size + sizeof(Block)) && (long)temp->size < (long)smallest->size && temp->free == 0)
+        new->size = (inputBlock->size) - size - sizeof(Block);
+        new->free = 0;
+        new->prevBlock = NULL;
+        new->nextBlock = inputBlock->nextBlock;
+
+        if(head->nextBlock != NULL)
         {
-            smallest = temp;
+            head->nextBlock->prevBlock = new;
         }
 
-        temp = temp->nextBlock;
-    }
+        allocated = (void*)inputBlock;
+        
+        allocated->size = size;
+        allocated->free = 1;
 
-    return smallest;
-}*/
+        inputBlock = (allocatedBlock*)allocated;
+
+        inputBlock = NULL;
+
+        head = new;
+
+        return allocated;
+    }
+    else
+    {
+        new->size = (inputBlock->size) - size - sizeof(Block);
+        new->free = 0;
+        new->prevBlock = inputBlock->prevBlock;
+        new->nextBlock = inputBlock->nextBlock;
+        
+        inputBlock->prevBlock->nextBlock = new;        
+        inputBlock->nextBlock->prevBlock = new;
+
+        allocated = (void*)inputBlock;
+
+        allocated->size = size;
+        allocated->free = 1;
+
+        inputBlock = NULL;
+
+        return allocated;
+    }
+    
+    //inputBlock -= (sizeof(inputBlock->nextBlock) + sizeof(inputBlock->prevBlock));
+}
 
 void* result;
 Block* temp;
@@ -66,23 +87,24 @@ void* new_malloc(size_t size)
     {
         head = sbrk(8192);
         programStart = head;
+        tail = head;
 
         head->free = 0;
         head->size = 8192 - sizeof(Block);
         head->nextBlock = NULL;
         head->prevBlock = NULL;
 
-        split(head, size);
-        result = head;
+        result = split(head, size);
+        //result = head;
 
-        return result;
+        return((void*)((long)result + sizeof(allocatedBlock)));
     }
 
     temp = head;
     smallest = head;
     while(temp != NULL)
     {    
-        if(temp->size >= size + sizeof(Block) && temp->size < smallest->size && temp->free == 0)
+        if(temp->size >= size + sizeof(allocatedBlock) && temp->size < smallest->size && temp->free == 0)
         {          
             smallest = temp;  
         }
@@ -98,23 +120,23 @@ void* new_malloc(size_t size)
         temp = temp->nextBlock;
     }
 
-    if((smallest->size) == (size + sizeof(Block)))
+    if((smallest->size) == (size + sizeof(allocatedBlock)))
     {
         smallest->free = 1;
         smallest->nextBlock = NULL;
         smallest->prevBlock = NULL;
         smallest->size = size;
 
-        result = ((void*)((long)smallest + sizeof(Block)));
+        result = ((void*)((long)smallest + sizeof(allocatedBlock)));
 
         return result;
     }
-    else if((smallest->size) > (size + sizeof(Block)))
+    else if((smallest->size) > (size + sizeof(allocatedBlock)))
     {
-        split(smallest, size);
-        result = smallest;
+        result = split(smallest, size);
+        //result = smallest;
 
-        return ((void*)((long)result + sizeof(Block)));
+        return ((void*)((long)result + sizeof(allocatedBlock)));
     }
     else
     {
@@ -130,13 +152,13 @@ void* new_malloc(size_t size)
             new->size = 8192 - sizeof(Block);
             new->free = 0;
 
-            split(new, size);
+            result = split(new, size);
 
-            result = new;
+            //result = new;
 
             //removeFromFreeList(new);
 
-            return ((void*)((long) result + sizeof(Block)));
+            return ((void*)((long) result + sizeof(allocatedBlock)));
         }
     }
 }
@@ -258,12 +280,12 @@ void userInterface()
     while(flag == 1)
     {
         char input[20];
-        scanf("%s", input);
+        scanf("\n%s", input);
 
         if(input[0] == 'A')
         {
             char* final = input + 1;
-            printf("%p", new_malloc(atoi(final)));
+            printf("%p\n", new_malloc(atoi(final)));
         }
         else if(input[0] == 'F')
         {
@@ -291,23 +313,27 @@ int main()
     void* addr5;
     void* addr6;    
 
-    addr1 = new_malloc(100); 
+    //printf("%ld", sizeof(allocatedBlock));
+    addr1 = new_malloc(30); 
+    printf("%p \n", addr1);
     addr2 = new_malloc(100);
+    printf("%p \n", addr2);
     addr3 = new_malloc(101);
+    printf("%p \n", addr3);
     addr4 = new_malloc(102);
     addr5 = new_malloc(103);
 
+    debugPrint();
+
+    new_free(addr1);
+
     //debugPrint();
+
+    new_free(addr3);
+
+    debugPrint();
 
     //new_free(addr1);
 
-    //debugPrint();
-
-    //new_free(addr3);
-
-    //debugPrint();
-
-    //new_free(addr1);
-
-    userInterface();
+    //userInterface();
 }
