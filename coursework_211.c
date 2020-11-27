@@ -182,11 +182,14 @@ void new_free(void* address)
     head->prevBlock = new;
 
     head = new;
-    /*
-    temp = head;
+    
+    /*temp = head;
     while(temp != NULL)
     {
-
+        if(temp->free == 0 && temp->nextBlock->free == 0 && temp + temp->size + sizeof(Block) == temp->nextBlock)
+        {
+            new = temp
+        }
 
         temp = temp->nextBlock;
     }*/
@@ -214,6 +217,22 @@ void debugPrint()
     }
 }
 
+void printList()
+{
+    temp = head;
+
+    //printf("%p", temp);
+
+    while(temp != NULL)
+    {
+        printf("- %p size: %ld -", temp, temp->size);
+
+        temp = temp->nextBlock;
+    }
+
+    printf("\n\n");
+}
+
 void userInterface()
 {
     int flag = 1;
@@ -222,24 +241,33 @@ void userInterface()
     while(flag == 1)
     {
         char input[20];
-        scanf("\n%s", input);
+        scanf("%s\n", input);
 
         if(input[0] == 'A')
         {
             char* final = input + 1;
-            printf("%p\n", new_malloc(atoi(final)));
+            void* address = new_malloc(atoi(final));
+            printf("%p\n\n", address/*new_malloc(atoi(final))*/);
+            printf("%p is here", temp);
+            printList();
         }
         else if(input[0] == 'F')
         {
             char* final = input + 1;
             unsigned long pointer = strtoul(final,NULL,16);
             new_free(pointer);
+            //printf("%p", temp);
+            printList();
         }
         else
         {
             flag = 0;
         }
         
+        /*
+            UI needs some work especially the foolowing while loop, print out the mallocs done etc...
+        */
+       //printf("here");
     }
 }
 
@@ -253,7 +281,7 @@ int main()
     void* addr6;    
 
     //printf("%ld", sizeof(allocatedBlock));
-    addr1 = new_malloc(30); 
+    /*addr1 = new_malloc(30); 
     printf("%p \n", addr1);
     addr2 = new_malloc(100);
     printf("%p \n", addr2);
@@ -261,20 +289,20 @@ int main()
     printf("%p \n", addr3);
     addr4 = new_malloc(102);
     addr5 = new_malloc(103);
-    printf("%p \n", addr5);
+    printf("%p \n", addr5);*/
 
     //debugPrint();
-
-    new_free(addr1);
-
-    //debugPrint();
-
-    new_free(addr3);
-    new_free(addr5);
-
-    debugPrint();
 
     //new_free(addr1);
 
-    //userInterface();
+    //debugPrint();
+
+    //new_free(addr3);
+    //new_free(addr5);
+
+    //debugPrint();
+
+    //new_free(addr1);
+
+    userInterface();
 }
