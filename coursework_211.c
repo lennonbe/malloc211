@@ -292,22 +292,26 @@ int main()
     void* addr6;    
 
     //printf("%ld", sizeof(allocatedBlock));
-    addr1 = new_malloc(30); 
+    addr1 = new_malloc(100); 
     printf("%p \n", addr1);
-    addr2 = new_malloc(8100);
+    addr2 = new_malloc(500);
     printf("%p \n", addr2);
-    new_free(addr2);
-    /*addr3 = new_malloc(101);
+    /*new_free(addr2);
+    new_free(addr1);*/
+    addr3 = new_malloc(100);
     printf("%p \n", addr3);
-    addr4 = new_malloc(102);
+    /*addr4 = new_malloc(102);
     addr5 = new_malloc(103);
     printf("%p \n", addr5);*/
 
     debugPrint();
 
+    new_free(addr2);
+    new_free(addr1);
+
     //new_free(addr1);
 
-    //debugPrint();
+    debugPrint();
 
     //new_free(addr1);
     //new_free(addr2);
