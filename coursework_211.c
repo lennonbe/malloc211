@@ -79,7 +79,7 @@ allocatedBlock* split(Block* inputBlock, size_t size) // these parameters are th
 
     if(inputBlock == head)
     {
-        new->size = (inputBlock->size) - size - sizeof(Block);
+        new->size = (inputBlock->size) - size - sizeof(Block) + sizeof(allocatedBlock);
         new->free = 0;
         new->prevBlock = NULL;
         new->nextBlock = inputBlock->nextBlock;
@@ -104,7 +104,7 @@ allocatedBlock* split(Block* inputBlock, size_t size) // these parameters are th
     }
     else
     {
-        new->size = (inputBlock->size) - size - sizeof(Block);
+        new->size = (inputBlock->size) - size - sizeof(Block) + sizeof(allocatedBlock);
         new->free = 0;
         new->prevBlock = inputBlock->prevBlock;
         new->nextBlock = inputBlock->nextBlock;
@@ -144,12 +144,6 @@ void* new_malloc(size_t size)
         head = sbrk(8192);
         programStart = head;
         tail = head;
-        
-        /*
-        aDDED In pickList in here
-        */
-
-        //head = pickList(size);
 
         head->free = 0;
         head->size = 8192 - sizeof(Block);
@@ -157,7 +151,6 @@ void* new_malloc(size_t size)
         head->prevBlock = NULL;
 
         result = split(head, size);
-        //result = head;
 
         totalSize = head->size;
 
@@ -252,24 +245,14 @@ void new_free(void* address)
     new->free = 0;
     new->nextBlock = head;
     new->prevBlock = NULL;
-    new->size = (curr->size);// + sizeof(allocatedBlock) - sizeof(Block);
+    new->size = (curr->size) - sizeof(Block) + sizeof(allocatedBlock);
 
     head->prevBlock = new;
 
     head = new;
 
     totalSize = totalSize + curr->size + sizeof(allocatedBlock) - sizeof(Block);
-    
-    /*temp = head;
-    while(temp != NULL)
-    {
-        if(temp->free == 0 && temp->nextBlock->free == 0 && temp + temp->size + sizeof(Block) == temp->nextBlock)
-        {
-            new = temp
-        }
 
-        temp = temp->nextBlock;
-    }*/
 }
 
 void debugPrint()
@@ -294,25 +277,6 @@ void debugPrint()
     }
 }
 
-/*void printList()
-{
-    //printf("Hello!");
-    temp = head;
-    printf("hi\n");
-    printf("%p\n", temp);
-    while(temp != NULL)
-    {
-        printf("- %p size: %ld -", temp, temp->size);
-        //fflush(stdout);
-
-        temp = temp->nextBlock;
-    }
-
-    printf("\n");
-
-    printf("%ld", totalSize);
-}*/
-
 void userInterface()
 {
     Block* curr = head;
@@ -325,14 +289,14 @@ void userInterface()
         char input[50];
         scanf("%s", input);
 
-        printf("\n----------------------------------------------------------------------------------- \n");
+        printf("----------------------------------------------------------------------------------- \n");
 
         if(input[0] == 'A')
         {
             char* final = input + 1;
             void* address = new_malloc(atoi(final));
             curr = head;
-            printf("%p is the allocated address \n", address);
+            printf("%p is the allocated address", address);
             //printf("%p is here", temp);
             
         }
@@ -359,9 +323,11 @@ void userInterface()
         
         printf("\n----------------------------------------------------------------------------------- \n");
 
-        printf("Total size of free list is %ld\n", totalSize);
+        printf("Total size of free list is %ld", totalSize);
+
+        printf("\n----------------------------------------------------------------------------------- \n");
+        printf("----------------------------------------------------------------------------------- \n");
             
-        //printf("here");
     }
 }
 
