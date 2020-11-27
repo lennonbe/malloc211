@@ -22,6 +22,7 @@ typedef struct allocatedBlock
 
 Block* head = NULL;
 Block* tail = NULL;
+size_t totalSize = NULL;
 
 allocatedBlock* split(Block* inputBlock, size_t size) // these parameters are the block which we will be splitting and the size we will be using from this block
 {
@@ -104,8 +105,12 @@ void* new_malloc(size_t size)
         result = split(head, size);
         //result = head;
 
+        totalSize = head->size;
+
         return((void*)((long)result + sizeof(allocatedBlock)));
     }
+
+    totalSize = totalSize - size - sizeof(allocatedBlock);
 
     temp = head;
     smallest = head;
@@ -158,6 +163,8 @@ void* new_malloc(size_t size)
         //{
         Block* new;
         new = sbrk(8192);
+
+        totalSize = totalSize + 8192 - sizeof(Block);
 
         tail->nextBlock = new;
 
@@ -243,7 +250,9 @@ void printList()
         temp = temp->nextBlock;
     }
 
-    printf("\n\n");
+    printf("\n");
+
+    printf("%ld", totalSize);
 }
 
 /*void userInterface()
