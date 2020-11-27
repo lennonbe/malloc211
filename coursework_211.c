@@ -22,7 +22,55 @@ typedef struct allocatedBlock
 
 Block* head = NULL;
 Block* tail = NULL;
-size_t totalSize = NULL;
+size_t totalSize = 0;
+
+/*Block* multipleLists[6];
+Block* heads[6];
+Block* tails[6];*/
+
+/*void setLists()
+{
+    for(int i = 0; i<6; i++)
+    {
+        if(i+1 < 5)
+        {
+            tails[i]->nextBlock = multipleLists[i+1];
+        }
+        else
+        {
+            tails[i]->nextBlock = NULL;
+            tail = tails[i];
+        }           
+    }
+}*/
+
+/*Block* pickList(size_t size)
+{
+    if(size > 0 && size < 32)
+    {
+        return multipleLists[0];
+    }
+    else if(size > 32 && size < 64)
+    {
+        return multipleLists[1];
+    }
+    else if(size > 64 && size < 256)
+    {
+        return multipleLists[2];
+    }
+    else if(size > 256 && size < 1024)
+    {
+        return multipleLists[3];
+    }
+    else if(size > 1024 && size < 4096)
+    {
+        return multipleLists[4];
+    }
+    else if(size > 4096)
+    {
+        return multipleLists[5];
+    }
+}*/
 
 allocatedBlock* split(Block* inputBlock, size_t size) // these parameters are the block which we will be splitting and the size we will be using from this block
 {
@@ -46,7 +94,7 @@ allocatedBlock* split(Block* inputBlock, size_t size) // these parameters are th
         allocated->size = size;
         allocated->free = 1;
 
-        inputBlock = (allocatedBlock*)allocated;
+        //inputBlock = (allocatedBlock*)allocated;
 
         inputBlock = NULL;
 
@@ -96,6 +144,12 @@ void* new_malloc(size_t size)
         head = sbrk(8192);
         programStart = head;
         tail = head;
+        
+        /*
+        aDDED In pickList in here
+        */
+
+        //head = pickList(size);
 
         head->free = 0;
         head->size = 8192 - sizeof(Block);
@@ -203,6 +257,8 @@ void new_free(void* address)
     head->prevBlock = new;
 
     head = new;
+
+    totalSize = totalSize + curr->size + sizeof(allocatedBlock) - sizeof(Block);
     
     /*temp = head;
     while(temp != NULL)
@@ -238,10 +294,12 @@ void debugPrint()
     }
 }
 
-void printList()
+/*void printList()
 {
-    printf("Hello!");
+    //printf("Hello!");
     temp = head;
+    printf("hi\n");
+    printf("%p\n", temp);
     while(temp != NULL)
     {
         printf("- %p size: %ld -", temp, temp->size);
@@ -253,25 +311,28 @@ void printList()
     printf("\n");
 
     printf("%ld", totalSize);
-}
+}*/
 
-/*void userInterface()
+void userInterface()
 {
+    Block* curr = head;
     int flag = 1;
 
     while(flag == 1)
     {
-        printList();
-        printf("Enter A (malloc) or F (free) and the size or address:");
+        printf("Enter A (malloc) or F (free) and the size or address: \n");
 
         char input[50];
-        scanf("\n%s\n\n", input);
+        scanf("%s", input);
+
+        printf("\n----------------------------------------------------------------------------------- \n");
 
         if(input[0] == 'A')
         {
             char* final = input + 1;
             void* address = new_malloc(atoi(final));
-            printf("%p\n\n", address);
+            curr = head;
+            printf("%p is the allocated address \n", address);
             //printf("%p is here", temp);
             
         }
@@ -279,17 +340,30 @@ void printList()
         {
             char* final = input + 1;
             unsigned long pointer = strtoul(final,NULL,16);
-            new_free(pointer);
-            //printf("%p", temp);
+            new_free((void*)pointer);
+            curr = head;
         }
         else
         {
             flag = 0;
         }
+
+        printf("\n----------------------------------------------------------------------------------- \n");
+
+        while(curr != NULL)
+        {
+            printf("- %p size: %ld -", curr, curr->size);
+
+            curr = curr->nextBlock;
+        }
         
-       //printf("here");
+        printf("\n----------------------------------------------------------------------------------- \n");
+
+        printf("Total size of free list is %ld\n", totalSize);
+            
+        //printf("here");
     }
-}*/
+}
 
 int main()
 {
@@ -301,26 +375,26 @@ int main()
     void* addr6;    
 
     //printf("%ld", sizeof(allocatedBlock));
-    addr1 = new_malloc(100); 
-    printf("%p \n", addr1);
-    addr2 = new_malloc(500);
-    printf("%p \n", addr2);
+    //addr1 = new_malloc(100); 
+    //printf("%p \n", addr1);
+    //addr2 = new_malloc(500);
+    //printf("%p \n", addr2);
     /*new_free(addr2);
     new_free(addr1);*/
-    addr3 = new_malloc(100);
-    printf("%p \n", addr3);
+    //addr3 = new_malloc(100);
+    //printf("%p \n", addr3);
     /*addr4 = new_malloc(102);
     addr5 = new_malloc(103);
     printf("%p \n", addr5);*/
 
-    debugPrint();
+    //debugPrint();
 
-    new_free(addr2);
-    new_free(addr1);
+    //new_free(addr2);
+    //new_free(addr1);
 
     //new_free(addr1);
 
-    debugPrint();
+    //debugPrint();
 
     //new_free(addr1);
     //new_free(addr2);
@@ -329,7 +403,7 @@ int main()
 
     //new_free(addr1);
 
-    //userInterface();
+    userInterface();
 
     /*int i = 1;
     while(i == 1)
